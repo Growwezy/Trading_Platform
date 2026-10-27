@@ -1,0 +1,10 @@
+# Reference-only clone, not part of this repo. We use the npm package instead.
+openalgo-charts/
+
+# Dependencies
+node_modules/
+
+# Env files
+.env
+.env.local
+.env.*.local

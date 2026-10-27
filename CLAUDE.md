@@ -3,8 +3,9 @@
 ## Read first
 Before any task, read:
 1. `docs/PROJECT_CONTEXT.md`: everything decided so far
-2. `docs/SCOPE.md`: roles, flows and the full page list
-3. `docs/PROGRESS.md`: what is done and what is next (once it exists)
+2. `docs/SCOPE.md`: index of roles and the end-to-end flow
+3. The role file for the part you are working on: `docs/roles/TRADER.md`, `docs/roles/ADMIN.md` or `docs/roles/SUPERADMIN.md` (full flow, rules and page list per role)
+4. `docs/PROGRESS.md`: what is done and what is next
 
 **Current phase: PLANNING.** Write docs only. No application code until the docs in `/docs` are reviewed and approved.
 
@@ -20,7 +21,7 @@ Before any task, read:
 3. **Sub-admin:** created by an Admin; can only use the pages and actions it was given.
 4. **Trader:** signs up on a client's subdomain, does KYC, deposits, trades, copies and refers.
 
-Page count: Trader 16, Admin 23, Super Admin + master website 17 = **56 pages** (full list in `docs/SCOPE.md`).
+Page count: Trader 16, Admin 23, Super Admin + master website 17 = **56 pages** (full lists in `docs/roles/`).
 
 ## Domains
 - Master website + Super Admin: `trade.growwezy.com`
