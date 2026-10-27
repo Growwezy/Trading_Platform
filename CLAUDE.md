@@ -59,7 +59,7 @@ Demo account, separate wallet, master profit share, PAMM, Leads, Liquidity / LP 
 - Symbol switching and a shared WebSocket fan-out (one upstream connection per feed / symbol, broadcast to many clients).
 - No database yet.
 - Twelve Data is on the Basic plan.
-- TradingView Advanced Charts: applied for, access not received yet. Keep charts behind a swappable layer and use a fallback chart until then.
+- Charts: using **OpenAlgo Charts** (open-source, `openalgo-charts` npm package) for now instead of TradingView Advanced Charts. Keep the chart library behind a swappable interface in case that changes later.
 
 ## Planned stack (confirm in `docs/TECH_STACK.md`)
 - Frontend: React + Vite, Tailwind, TanStack Query (server data), Zustand (live / UI state)

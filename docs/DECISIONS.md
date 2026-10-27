@@ -2,6 +2,7 @@
 
 One line per decision, newest first. Format: date · decision · reason (if any).
 
+- 2026-10-28 · Use OpenAlgo Charts instead of TradingView Advanced Charts, for now · validated with a working terminal + API test (`Test_Terminal/`, local only, not pushed); open-source, no waiting on TradingView access
 - 2026-10-28 · Use the `openalgo-charts` npm package for the trading terminal's charts · covers charts, indicators, drawing tools and order/position lines on top of our own data feed and trading engine; Apache-2.0, no runtime dependencies
 - 2026-10-27 · Build as a web app; native mobile apps later · faster to ship, one codebase
 - 2026-10-27 · Each client gets a subdomain via wildcard DNS; client picks it in the application form · no manual setup per client

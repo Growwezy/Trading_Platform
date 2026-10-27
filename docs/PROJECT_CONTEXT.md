@@ -64,8 +64,8 @@ Everything decided so far. Source of truth for planning. If something here confl
 ## 5. Market data and charts
 - **Binance WebSocket**: crypto, free, fast.
 - **Twelve Data**: forex / crypto, **Basic plan** token in hand. A speed comparison script vs Binance has been run.
-- **TradingView Advanced Charts**: applied, access not received yet. Free Advanced Charts Agreement PDF received; the owner must sign. A separate work Gmail was created for this client's accounts.
-- Until TradingView access arrives, use a fallback chart behind a swappable interface.
+- **Charting library: OpenAlgo Charts** (open-source, Apache-2.0, `openalgo-charts` npm package), used instead of TradingView Advanced Charts for now. TradingView Advanced Charts access was applied for (Agreement PDF received, access not yet granted) but is no longer the active plan; revisit only if a real need comes up.
+- Keep the chart library behind a swappable interface regardless, per the engineering rules.
 - Script / strategy editor: not wanted.
 
 ## 6. What already exists (prototype)

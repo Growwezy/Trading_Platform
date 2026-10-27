@@ -1,6 +1,9 @@
 # Reference-only clone, not part of this repo. We use the npm package instead.
 openalgo-charts/
 
+# Throwaway terminal/API test, not the real platform. Not pushed to GitHub.
+Test_Terminal/
+
 # Dependencies
 node_modules/
 
