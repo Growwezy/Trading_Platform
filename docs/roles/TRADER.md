@@ -30,6 +30,7 @@ The end user who trades. Belongs to exactly one client (broker).
 7. Trades, withdraws, copy trades and refers.
 
 ## Rules
+- **OTP:** not required on login. Used to verify email at sign-up and for forgot-password resets (see `PROJECT_CONTEXT.md` §4).
 - **Balance:** one trading balance. No separate wallet for now.
 - **Deposit:** manual; Admin verifies proof.
 - **Withdraw:** request → Admin approves or rejects → Admin marks paid.
@@ -57,7 +58,7 @@ The end user who trades. Belongs to exactly one client (broker).
 | 13 | Profile | Copy Trading | List of followable accounts (referrer + admin-listed), follow / stop, performance |
 | 14 | Profile | Refer & Earn | Referral link and code, referred users, earnings |
 | 15 | Profile | Notification Center | Deposit / withdrawal / KYC updates, trade alerts, announcements from Admin |
-| 16 | Profile | Settings | Profile details, change password, OTP |
+| 16 | Profile | Settings | Profile details, change password |
 
 ## Interactions with other roles
 - **Admin** approves KYC, deposits, withdrawals; can block the trader; can adjust balance (logged); sends announcements; decides which accounts are followable.

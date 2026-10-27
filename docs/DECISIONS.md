@@ -2,6 +2,10 @@
 
 One line per decision, newest first. Format: date · decision · reason (if any).
 
+- 2026-10-28 · Auth: server-side sessions in Redis (httpOnly cookie), not JWT · instant revocation for blocking traders / suspending clients / permission changes; no native mobile app this phase; safer than a token in localStorage
+- 2026-10-28 · OTP not required on login by default, for any role; used for sign-up email verification and forgot-password resets instead · Admin's own login OTP toggle and Super Admin's always-on login OTP still apply on top of this
+- 2026-10-28 · Files: Cloudinary during development/testing, S3 in production · behind one small interface so the switch touches one module
+- 2026-10-28 · Hosting: AWS confirmed; Twelve Data: free plan while developing, paid plan before production · EC2 vs ECS and the specific paid plan still open
 - 2026-10-28 · Use OpenAlgo Charts instead of TradingView Advanced Charts, for now · validated with a working terminal + API test (`Test_Terminal/`, local only, not pushed); open-source, no waiting on TradingView access
 - 2026-10-28 · Use the `openalgo-charts` npm package for the trading terminal's charts · covers charts, indicators, drawing tools and order/position lines on top of our own data feed and trading engine; Apache-2.0, no runtime dependencies
 - 2026-10-27 · Build as a web app; native mobile apps later · faster to ship, one codebase

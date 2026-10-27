@@ -43,7 +43,7 @@ Page count: Trader 16, Admin 23, Super Admin + master website 17 = **56 pages** 
 - Admin can manually adjust a balance. **Every adjustment must be logged** (who, when, amount, reason).
 - Client branding (logo, name) comes from the application form automatically; the Admin can edit it later.
 - Super Admin edits the client application form; each Admin edits its own trader KYC form.
-- OTP on login: optional toggle for the main Admin only; always on for Super Admin.
+- OTP: not required on login by default, for any role. Used for email verification at sign-up and for forgot-password resets, for every role. Login OTP is additionally: optional toggle for the main Admin only; always on for Super Admin.
 
 ## Out of scope for this phase
 Demo account, separate wallet, master profit share, PAMM, Leads, Liquidity / LP logs, A-Book / B-Book split, detailed trading logs, Super Admin login-as-client, online payments, auto-suspend, custom client domains, Android / iOS apps, script / strategy editor.

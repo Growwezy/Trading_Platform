@@ -28,6 +28,11 @@ Everything decided so far. Source of truth for planning. If something here confl
 - Branding (logo, name) is taken from the application form; Admin can edit it later. Loaded at runtime per tenant.
 
 ## 4. Business rules
+### OTP (all roles)
+- Not required on login by default.
+- Used for email verification at sign-up, and for forgot-password resets — every role.
+- Login OTP beyond that: optional toggle for the main Admin's own login; always on for Super Admin.
+
 ### Client (broker) side
 - Client applies on the master website; Super Admin approves or rejects.
 - Client pays setup / monthly fee, uploads proof on "My Subscription"; Super Admin verifies on "Billing".
@@ -49,14 +54,12 @@ Everything decided so far. Source of truth for planning. If something here confl
 - Admin can manually adjust a trader's balance; **every adjustment is logged** (who, when, amount, reason).
 - Admin controls symbol settings (enable / disable, leverage, lot size, trading hours) from the Super Admin's master symbol list.
 - Admin edits its own trader KYC form.
-- OTP on login: optional toggle for the main Admin only.
 - Activity Log page records balance adjustments and sub-admin actions.
 
 ### Super Admin side
 - Sees all clients' traders, orders and transactions (view only).
 - Does not log in to client admin panels (for now).
 - Edits the client application form.
-- OTP always on.
 
 ### Legal
 - Legal and compliance are handled by Growwezy. No regulatory flows in the build.
