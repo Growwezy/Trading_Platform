@@ -11,16 +11,19 @@ Browser (trader / admin / super admin)
 Cloudflare (DNS, wildcard SSL for *.<platform-domain>)
    │
    ▼
-AWS — one Node.js backend (Express + ws), behind a load balancer (proposed)
+AWS — backend container (Express + ws), behind a load balancer (proposed)
    │               │                    │
    ▼               ▼                    ▼
 PostgreSQL      Redis               Cloudinary / S3
-(tenant data,   (sessions, price    (KYC docs,
- transactions)   cache, pub/sub)     client logos)
+(in Docker,     (sessions, price    (KYC docs,
+ tenant data,    cache, pub/sub)     client logos)
+ transactions)
    │
    ▼
 Upstream market data: Binance WebSocket, Twelve Data
 ```
+
+**Dev vs production, same code, different Postgres:** while building, both developers run the backend against one shared **NeonDB** database (so data persists across machines instead of two disconnected local databases). On AWS, the backend and Postgres both run **as Docker containers** instead — not Neon, not a managed RDS. Only the `DATABASE_URL` changes between the two; nothing in the application code does.
 
 Everything a browser talks to goes through one backend. The backend is the only thing that talks to Postgres, Redis, the file store, and the upstream price feeds — nothing upstream is ever called directly from the browser.
 
@@ -115,13 +118,15 @@ In-app only for this phase (no email/SMS delivery system beyond OTP and account 
 
 ## 11. Deployment topology
 
-- Cloudflare: DNS + wildcard SSL in front of everything.
-- AWS: one backend deployment (EC2 vs ECS still open, per `TECH_STACK.md`) behind a load balancer once there's more than one instance; Postgres and Redis as managed services recommended (RDS, ElastiCache) over self-hosting, to keep a 2-person team out of database/cache ops — not yet confirmed, flagged below.
-- Static frontend builds (the three SPAs) served from a CDN/static host, not the Node backend.
+- **Building phase:** backend runs in Docker locally; database is the shared **NeonDB** instance (both developers point at the same one), not a per-machine local Postgres. This is what makes data persist across devices during development.
+- **Production, on AWS:** backend and Postgres both run **as Docker containers** — not Neon, not a managed RDS. EC2 vs ECS still open (per `TECH_STACK.md`) for *what* runs the containers, but the containers themselves are decided.
+- Cloudflare: DNS + wildcard SSL in front of everything, in both phases.
+- Redis's production home (Docker alongside the others, or a managed ElastiCache) is not yet stated either way — flagged below.
+- Static frontend builds (the three SPAs) served from a CDN/static host, not the backend container.
 
 ## 12. Open items — confirm before building
 
 1. **Monorepo with three frontend apps, one backend service** (§4, §5) — proposed here, not previously decided. Confirm or push back.
-2. **Managed Postgres/Redis (RDS/ElastiCache) vs self-hosted on the same EC2/ECS** — affects cost and ops burden; not decided.
+2. **Redis hosting in production:** Docker alongside Postgres and the backend, or a managed service (ElastiCache)? Postgres and the backend are confirmed as Docker; Redis wasn't addressed.
 3. **WebSocket scaling**: the Redis pub/sub design in §6 assumes more than one backend instance eventually; confirm that's actually the plan, or this can simplify.
 4. Everything still open from `TECH_STACK.md` §"Open items" (EC2 vs ECS, Twelve Data production plan, Node version) feeds into §11 here once decided.

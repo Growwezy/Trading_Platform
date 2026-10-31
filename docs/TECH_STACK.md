@@ -14,9 +14,13 @@ Confirms the stack from `PROJECT_CONTEXT.md` §7. Decided items first, open item
 - **Node.js + Express** — REST API.
 - **`ws`** — WebSocket server, for live prices to the browser and (later) push events (notifications, order fills).
 - One shared upstream connection per market-data feed/symbol, fanned out to every subscribed browser client (already proven in the terminal test).
+- **Runs in Docker**, in every environment (local dev and the AWS deployment) — one `Dockerfile` for the backend, so "it works on my machine" and "it works on AWS" are the same container.
 
 ## Database
-- **PostgreSQL** via **Prisma** (ORM + migrations).
+- **PostgreSQL** via **Prisma** (ORM + migrations), in every environment — only *where* Postgres runs differs:
+  - **While building:** **NeonDB** (managed, serverless Postgres). Both developers point at the same Neon database, so data persists across machines instead of each person having their own disconnected local database.
+  - **In production on AWS:** Postgres runs **in Docker** (self-hosted, alongside the backend container), not Neon and not a managed service like RDS.
+  - Same `DATABASE_URL`-style connection string either way — Prisma doesn't care which is behind it — so moving from Neon to the Dockerized instance is a config change, not a code change.
 - Every tenant-owned table carries `tenant_id` (engineering rule). Tenant is resolved once in middleware from the request hostname.
 - Money rule: a balance never changes without a transaction record row alongside it.
 
@@ -45,16 +49,18 @@ Confirms the stack from `PROJECT_CONTEXT.md` §7. Decided items first, open item
 - Revisit JWT only if a public partner-facing API is added later; even then, issue separate API keys for that rather than reusing the web session mechanism.
 
 ## Hosting / DNS
-- **AWS** — confirmed for app hosting. EC2 vs ECS still to be picked (open item below).
+- **AWS** — confirmed for app hosting. Backend and database both run as Docker containers there (see Backend and Database above). EC2 vs ECS still to be picked (open item below) — Docker runs on either, so this doesn't block picking a container runtime now.
 - **Cloudflare** — DNS, wildcard record (`*.<platform-domain>`) + wildcard SSL for client subdomains.
 - **Hostinger** — domain registrar only (DNS is on Cloudflare, not Hostinger).
 - Render was used on an earlier project; not the current plan, listed here only so it isn't picked up by mistake.
 
 ## Dev tooling
 - Git/GitHub for source control.
-- Environment secrets (API keys, DB URL) in `.env`, never committed (`.gitignore`).
+- **Docker** (and `docker-compose` locally) for the backend; see Backend and Database above for which pieces run in it per environment.
+- Environment secrets (API keys, DB URL) in `.env`, never committed (`.gitignore`). The Neon connection string (dev) and the Dockerized Postgres connection string (production) are both just `DATABASE_URL` values — never hard-coded.
 
 ## Open items — do not assume, confirm with the user
-1. **Hosting:** EC2 vs ECS, and whether staging/production are separate from day one.
-2. **Production Twelve Data plan/cost** once past the free plan (already an open question in `PROJECT_CONTEXT.md` §9).
-3. **Node.js version** to standardize on (OpenAlgo Charts' own repo requires Node ≥ 20 for its build tooling — not a constraint on our runtime, but worth matching).
+1. **Hosting:** EC2 vs ECS to run the Docker containers on, and whether staging/production are separate from day one.
+2. **Redis hosting in production:** in Docker alongside Postgres and the backend, or a managed service (ElastiCache)? Not yet stated either way — only Postgres and the backend were confirmed as Docker.
+3. **Production Twelve Data plan/cost** once past the free plan (already an open question in `PROJECT_CONTEXT.md` §9).
+4. **Node.js version** to standardize on (OpenAlgo Charts' own repo requires Node ≥ 20 for its build tooling — not a constraint on our runtime, but worth matching).
