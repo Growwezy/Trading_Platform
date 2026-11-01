@@ -1,0 +1,12 @@
+{
+  "name": "growwezy",
+  "private": true,
+  "workspaces": [
+    "frontend/trader",
+    "frontend/packages/api-client",
+    "frontend/packages/chart-feed"
+  ],
+  "scripts": {
+    "dev:trader": "npm run dev -w frontend/trader"
+  }
+}

@@ -5,6 +5,9 @@ import cookieSignature from "cookie-signature";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { tickChannelName } from "../feeds/feed-manager.js";
+import { barChannelName } from "../feeds/bar-channel.js";
+import { ensureBinanceKlineStream } from "../feeds/binance-kline.feed.js";
+import { ensureTwelveDataBarBuilder } from "../feeds/twelvedata-bar-builder.js";
 import { resolveTenantByHost } from "../modules/tenants/tenants.service.js";
 import { computeAdjustedPrice } from "../modules/trading/pricing.service.js";
 
@@ -37,19 +40,24 @@ async function authenticateTrader(req: IncomingMessage, tenantId: string) {
 export async function startWebSocketServer(httpServer: HttpServer) {
   const wss = new WebSocketServer({ noServer: true });
 
-  // symbolCode -> id, loaded once; symbols don't change often enough to warrant a live refresh here.
-  const symbolIdByCode = new Map<string, string>();
+  // symbolCode -> {id, provider}, loaded once; symbols don't change often enough to warrant a live refresh here.
+  const symbolByCode = new Map<string, { id: string; provider: "binance" | "twelvedata" }>();
   for (const symbol of await prisma.symbol.findMany()) {
-    symbolIdByCode.set(symbol.code, symbol.id);
+    symbolByCode.set(symbol.code, { id: symbol.id, provider: symbol.provider });
   }
 
-  // symbolCode -> connections currently subscribed to it.
+  // symbolCode -> connections currently subscribed to its ticks.
   const subscribers = new Map<string, Set<ConnectionContext>>();
+  // "symbolCode:interval" -> raw WebSocket connections currently subscribed to its bars.
+  const barSubscribers = new Map<string, Set<WebSocket>>();
   // Per-connection record of what to clean up on close.
-  const connectionSubscriptions = new WeakMap<WebSocket, Array<{ symbolCode: string; ctx: ConnectionContext }>>();
+  const connectionSubscriptions = new WeakMap<
+    WebSocket,
+    { ticks: Array<{ symbolCode: string; ctx: ConnectionContext }>; bars: string[] }
+  >();
 
   const tickSubscriber = redis.duplicate();
-  for (const code of symbolIdByCode.keys()) {
+  for (const code of symbolByCode.keys()) {
     await tickSubscriber.subscribe(tickChannelName(code));
   }
 
@@ -59,13 +67,29 @@ export async function startWebSocketServer(httpServer: HttpServer) {
     if (!contexts || contexts.size === 0) return;
 
     const tick = JSON.parse(message);
-    const symbolId = symbolIdByCode.get(symbolCode);
-    if (!symbolId) return;
+    const symbol = symbolByCode.get(symbolCode);
+    if (!symbol) return;
 
     for (const ctx of contexts) {
       if (ctx.ws.readyState !== WebSocket.OPEN) continue;
-      const adjusted = await computeAdjustedPrice(symbolId, ctx.tenantId, ctx.groupId, tick.price);
+      const adjusted = await computeAdjustedPrice(symbol.id, ctx.tenantId, ctx.groupId, tick.price);
       ctx.ws.send(JSON.stringify({ type: "tick", symbol: symbolCode, bid: adjusted.bid.toString(), ask: adjusted.ask.toString(), ts: tick.ts }));
+    }
+  });
+
+  // Bars use a separate Redis subscriber, subscribed to channels on demand
+  // (only once some client actually asks for that symbol+interval), unlike
+  // the tick subscriber above which covers every symbol upfront.
+  const barSubscriber = redis.duplicate();
+  const subscribedBarChannels = new Set<string>();
+
+  barSubscriber.on("message", (channel, message) => {
+    // channel is "bars:<symbol>:<interval>"; barSubscribers is keyed "<symbol>:<interval>".
+    const barKey = channel.slice("bars:".length);
+    const targets = barSubscribers.get(barKey);
+    if (!targets || targets.size === 0) return;
+    for (const ws of targets) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(message);
     }
   });
 
@@ -99,26 +123,66 @@ export async function startWebSocketServer(httpServer: HttpServer) {
   wss.on("connection", (ws: WebSocket, tenant: { id: string }, user: { groupId: string | null } | null) => {
     const groupId = user?.groupId ?? null;
     const subscribedSymbols = new Set<string>();
+    const subscribedBarKeys = new Set<string>();
+    connectionSubscriptions.set(ws, { ticks: [], bars: [] });
+
+    async function handleSubscribeTicks(symbolCodes: string[]) {
+      for (const symbolCode of symbolCodes) {
+        if (!symbolByCode.has(symbolCode) || subscribedSymbols.has(symbolCode)) continue;
+
+        const enabled = await prisma.tenantSymbol.findFirst({
+          where: { tenantId: tenant.id, enabled: true, symbol: { code: symbolCode } },
+        });
+        if (!enabled) continue;
+
+        subscribedSymbols.add(symbolCode);
+        const ctx: ConnectionContext = { ws, tenantId: tenant.id, groupId };
+        const set = subscribers.get(symbolCode) ?? new Set();
+        set.add(ctx);
+        subscribers.set(symbolCode, set);
+        connectionSubscriptions.get(ws)!.ticks.push({ symbolCode, ctx });
+      }
+    }
+
+    async function handleSubscribeBars(symbolCode: string, interval: string) {
+      const symbol = symbolByCode.get(symbolCode);
+      if (!symbol) return;
+
+      const enabled = await prisma.tenantSymbol.findFirst({
+        where: { tenantId: tenant.id, enabled: true, symbol: { code: symbolCode } },
+      });
+      if (!enabled) return;
+
+      const barKey = `${symbolCode}:${interval}`;
+      if (subscribedBarKeys.has(barKey)) return;
+      subscribedBarKeys.add(barKey);
+
+      if (symbol.provider === "binance") {
+        ensureBinanceKlineStream(symbolCode, interval);
+      } else {
+        ensureTwelveDataBarBuilder(symbolCode, interval);
+      }
+
+      const channel = barChannelName(symbolCode, interval);
+      if (!subscribedBarChannels.has(channel)) {
+        subscribedBarChannels.add(channel);
+        await barSubscriber.subscribe(channel);
+      }
+
+      const set = barSubscribers.get(barKey) ?? new Set();
+      set.add(ws);
+      barSubscribers.set(barKey, set);
+      connectionSubscriptions.get(ws)!.bars.push(barKey);
+    }
 
     ws.on("message", async (raw) => {
       try {
         const msg = JSON.parse(raw.toString());
-        if (msg.type !== "subscribe" || !Array.isArray(msg.symbols)) return;
 
-        for (const symbolCode of msg.symbols as string[]) {
-          if (!symbolIdByCode.has(symbolCode) || subscribedSymbols.has(symbolCode)) continue;
-
-          const enabled = await prisma.tenantSymbol.findFirst({
-            where: { tenantId: tenant.id, enabled: true, symbol: { code: symbolCode } },
-          });
-          if (!enabled) continue;
-
-          subscribedSymbols.add(symbolCode);
-          const ctx: ConnectionContext = { ws, tenantId: tenant.id, groupId };
-          const set = subscribers.get(symbolCode) ?? new Set();
-          set.add(ctx);
-          subscribers.set(symbolCode, set);
-          connectionSubscriptions.set(ws, [...(connectionSubscriptions.get(ws) ?? []), { symbolCode, ctx }]);
+        if (msg.type === "subscribe" && Array.isArray(msg.symbols)) {
+          await handleSubscribeTicks(msg.symbols as string[]);
+        } else if (msg.type === "subscribeBars" && typeof msg.symbol === "string" && typeof msg.interval === "string") {
+          await handleSubscribeBars(msg.symbol, msg.interval);
         }
       } catch (err) {
         console.error("[ws] failed to handle message", err);
@@ -126,8 +190,12 @@ export async function startWebSocketServer(httpServer: HttpServer) {
     });
 
     ws.on("close", () => {
-      for (const { symbolCode, ctx } of connectionSubscriptions.get(ws) ?? []) {
+      const record = connectionSubscriptions.get(ws);
+      for (const { symbolCode, ctx } of record?.ticks ?? []) {
         subscribers.get(symbolCode)?.delete(ctx);
+      }
+      for (const barKey of record?.bars ?? []) {
+        barSubscribers.get(barKey)?.delete(ws);
       }
     });
   });

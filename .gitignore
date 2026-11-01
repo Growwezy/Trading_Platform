@@ -7,6 +7,9 @@ Test_Terminal/
 # Dependencies
 node_modules/
 
+# Build output
+dist/
+
 # Env files
 .env
 .env.local

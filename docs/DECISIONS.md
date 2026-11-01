@@ -2,6 +2,10 @@
 
 One line per decision, newest first. Format: date · decision · reason (if any).
 
+- 2026-11-01 · Trader frontend: core trading flow first (Login/Sign Up/Forgot-Reset, Trading Terminal, Holdings, Dashboard), the other 10 pages deferred · user's call, to get something testable in the browser sooner
+- 2026-11-01 · Trader frontend: fresh visual design, not porting `Test_Terminal/`'s UI components · user's call; the prototype's chart-integration *architecture* is still reused (read as reference, not copied) since it's proven
+- 2026-11-01 · Chart history comes straight from Binance/Twelve Data's own REST APIs, not our tick cache; live Binance candles use its native kline WebSocket (no server-side aggregation); Twelve Data candles are built by bucketing its existing raw-tick stream, since its WS has no kline equivalent · matches `Test_Terminal/server/services`' proven approach; since `pricing.service.ts`'s markup is symmetric around the raw price, the midpoint is unaffected by markup, so raw provider candles stay consistent with "never show the raw price" in effect
+- 2026-11-01 · Root npm workspaces now cover `frontend/trader` + `frontend/packages/{api-client,chart-feed}` · deferred in the backend-scaffolding stage until the frontend existed; now it does
 - 2026-11-01 · Twelve Data: all symbols pooled onto **one** shared WebSocket connection (not one per symbol like Binance) · the free/trial plan caps concurrent connections (`TECH_STACK.md`); Binance has no such constraint so it keeps one connection per symbol for simplicity
 - 2026-11-01 · `computeAdjustedPrice` caches `Symbol` rows (60s TTL) and `GroupMarkup` lookups (10s TTL) in memory instead of querying Postgres on every tick · a naive per-tick DB query exhausted Prisma's connection pool within seconds under Binance's live BTCUSDT trade stream (found via live testing, not review) and stalled unrelated requests sharing the pool
 - 2026-11-01 · Tick processor throttles SL/TP checking to once per 300ms per symbol, not every raw tick · SL/TP doesn't need sub-second precision; this plus the pricing cache above keeps DB load sane under a fast-moving feed

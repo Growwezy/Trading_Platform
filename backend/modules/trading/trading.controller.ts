@@ -3,6 +3,7 @@ import { Prisma, type Position, type PositionHistory } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { getTraderMe } from "../auth/auth.service.js";
 import { getCachedPrice } from "../../feeds/feed-manager.js";
+import { fetchHistoricalBars } from "../../feeds/bars.service.js";
 import { computeAdjustedPrice } from "./pricing.service.js";
 import * as tradingService from "./trading.service.js";
 import { modifySlTpSchema, placeOrderSchema } from "./trading.types.js";
@@ -134,6 +135,25 @@ async function closePositionHandler(req: Request, res: Response, next: NextFunct
   }
 }
 
+async function getMarketHistory(req: Request, res: Response, next: NextFunction) {
+  try {
+    const symbolCode = String(req.query.symbol ?? "");
+    const interval = String(req.query.interval ?? "1m");
+    const limit = Number(req.query.limit ?? 500);
+
+    const symbol = await prisma.symbol.findUnique({ where: { code: symbolCode } });
+    if (!symbol) {
+      res.status(404).json({ error: { code: "not_found", message: "Unknown symbol." } });
+      return;
+    }
+
+    const bars = await fetchHistoricalBars(symbol.provider, symbol.code, interval, limit);
+    res.json({ bars });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getAccountSummary(req: Request, res: Response, next: NextFunction) {
   try {
     const snapshot = await tradingService.getAccountSnapshot(req.tenant!.id, req.session.userId!);
@@ -153,6 +173,7 @@ async function getAccountSummary(req: Request, res: Response, next: NextFunction
 export const tradingController = {
   requireCanTrade,
   getSymbols,
+  getMarketHistory,
   getOpenPositions,
   getPositionHistory,
   placeOrder,
