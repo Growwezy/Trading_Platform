@@ -18,9 +18,10 @@ Update after every task: move items between sections, add the date.
 - 2026-10-31: Decided backend runs in Docker everywhere; database is NeonDB while building (shared/persists across both developers' machines), Postgres-in-Docker on AWS in production (not RDS). Updated `TECH_STACK.md` and `ARCHITECTURE.md` (system diagram, deployment topology, open items — Redis's production hosting is now the only piece of that puzzle still open).
 - 2026-11-01: Decided production runs backend, Postgres and Redis in three separate Docker containers, not combined into one — so an app crash or redeploy can't take the database or Redis down with it. Updated `TECH_STACK.md` and `ARCHITECTURE.md`; this also closes the "Redis hosting in production" open item from the previous entry.
 - 2026-11-01: `docs/DATABASE_SCHEMA.md` written — derived from the 56 pages and `TRADING_ENGINE.md`'s formulas, not guessed from scratch. One `users` table for every role; configurable forms (KYC, client application) stored as JSONB against their own template rather than fixed columns; `transactions` as the one ledger every balance change writes through; ticket-based `positions`/`position_history`. Sessions and OTP deliberately left out — they live in Redis, not here.
+- 2026-11-01: `docs/API_SPEC.md` written — REST routes for all 56 pages across the three surfaces (`/api/trader`, `/api/admin`, `/api/superadmin`), plus shared auth/tenant/file routes and the WebSocket message set. Routes map directly onto `DATABASE_SCHEMA.md` tables; no new design decisions, just the surface.
 
 ## In progress
-- Planning docs still to write: API_SPEC, ROLES_PERMISSIONS, PHASES, GLOSSARY, OPEN_QUESTIONS.
+- Planning docs still to write: ROLES_PERMISSIONS, PHASES, GLOSSARY, OPEN_QUESTIONS.
 
 ## Next
 - Review and approve `ARCHITECTURE.md`, `TRADING_ENGINE.md` and `DATABASE_SCHEMA.md`, especially their proposed items (listed in each doc's own Open items section).
