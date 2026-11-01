@@ -2,6 +2,7 @@
 
 One line per decision, newest first. Format: date · decision · reason (if any).
 
+- 2026-11-01 · Production: backend, Postgres and Redis each run in their own separate Docker container, never combined into one · an app crash or redeploy must never be able to take the database or Redis down with it; separate containers tune/restart/back up independently and keep the database's files out of the app's filesystem; docker-compose makes multiple containers no harder to run than one
 - 2026-10-31 · Backend runs in Docker in every environment; database is NeonDB while building, Postgres-in-Docker on AWS in production · Neon keeps dev data shared and persistent across both developers' machines; AWS deployment is self-hosted Docker, not RDS. `DATABASE_URL` is the only thing that changes between the two.
 - 2026-10-28 · Auth: server-side sessions in Redis (httpOnly cookie), not JWT · instant revocation for blocking traders / suspending clients / permission changes; no native mobile app this phase; safer than a token in localStorage
 - 2026-10-28 · OTP not required on login by default, for any role; used for sign-up email verification and forgot-password resets instead · Admin's own login OTP toggle and Super Admin's always-on login OTP still apply on top of this
