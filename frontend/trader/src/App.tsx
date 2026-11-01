@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useBranding } from "./lib/useBranding.js";
 import { Layout } from "./components/Layout.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { LoginPage } from "./pages/LoginPage.js";
@@ -10,6 +11,8 @@ import { HoldingsPage } from "./pages/HoldingsPage.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
 
 export function App() {
+  useBranding();
+
   return (
     <BrowserRouter>
       <Routes>

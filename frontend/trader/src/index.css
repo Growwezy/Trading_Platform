@@ -2,10 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Overridden at runtime from the tenant's brandColors (GET /api/tenant/config)
+     when set; this is the fallback for a tenant that hasn't configured one. */
+  --accent: 56 189 248; /* sky-400, as r g b */
+  --bg-app: 2 6 23; /* slate-950 */
+  --bg-panel: 15 23 42; /* slate-900 */
+  --bg-elevated: 30 41 59; /* slate-800 */
+  --border: 51 65 85; /* slate-700 */
+  --text-primary: 226 232 240; /* slate-200 */
+  --text-muted: 148 163 184; /* slate-400 */
+  --up: 52 211 153; /* emerald-400 */
+  --down: 248 113 113; /* red-400 */
+}
+
 html, body, #root {
   height: 100%;
 }
 
 body {
-  @apply bg-slate-950 text-slate-100;
+  background-color: rgb(var(--bg-app));
+  color: rgb(var(--text-primary));
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
 }

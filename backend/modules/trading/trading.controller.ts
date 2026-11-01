@@ -63,10 +63,18 @@ async function getSymbols(req: Request, res: Response, next: NextFunction) {
 
     const symbols = await Promise.all(
       tenantSymbols.map(async (ts) => {
+        const base = {
+          code: ts.symbol.code,
+          assetClass: ts.symbol.assetClass,
+          contractSize: dec(ts.symbol.contractSize),
+          leverageCap: dec(ts.leverageCap),
+          minLot: dec(ts.minLot),
+          maxLot: dec(ts.maxLot),
+        };
         const tick = await getCachedPrice(ts.symbol.code);
-        if (!tick) return { code: ts.symbol.code, assetClass: ts.symbol.assetClass, bid: null, ask: null };
+        if (!tick) return { ...base, bid: null, ask: null };
         const adjusted = await computeAdjustedPrice(ts.symbolId, tenantId, user.groupId, tick.price);
-        return { code: ts.symbol.code, assetClass: ts.symbol.assetClass, bid: dec(adjusted.bid), ask: dec(adjusted.ask) };
+        return { ...base, bid: dec(adjusted.bid), ask: dec(adjusted.ask) };
       }),
     );
 

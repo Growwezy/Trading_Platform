@@ -2,6 +2,8 @@
 
 One line per decision, newest first. Format: date · decision · reason (if any).
 
+- 2026-11-01 · Trader frontend visual direction: dense pro-terminal style (MT4/MT5/Binance-like), not clean/minimal fintech · user's call, after first browser look at the core flow called it "too basic"
+- 2026-11-01 · Tenant branding (`GET /api/tenant/config`) wired into the frontend now rather than deferred · small addition since the endpoint already existed; redesign uses real per-tenant colors/logo from the start
 - 2026-11-01 · Trader frontend: core trading flow first (Login/Sign Up/Forgot-Reset, Trading Terminal, Holdings, Dashboard), the other 10 pages deferred · user's call, to get something testable in the browser sooner
 - 2026-11-01 · Trader frontend: fresh visual design, not porting `Test_Terminal/`'s UI components · user's call; the prototype's chart-integration *architecture* is still reused (read as reference, not copied) since it's proven
 - 2026-11-01 · Chart history comes straight from Binance/Twelve Data's own REST APIs, not our tick cache; live Binance candles use its native kline WebSocket (no server-side aggregation); Twelve Data candles are built by bucketing its existing raw-tick stream, since its WS has no kline equivalent · matches `Test_Terminal/server/services`' proven approach; since `pricing.service.ts`'s markup is symmetric around the raw price, the midpoint is unaffected by markup, so raw provider candles stay consistent with "never show the raw price" in effect

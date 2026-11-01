@@ -6,48 +6,48 @@ export function HoldingsPage() {
   const { data: history } = usePositionHistory();
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-4 overflow-auto p-4">
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-300">Open positions</h2>
-        <div className="rounded-lg bg-slate-900">
+        <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted">Open positions</h2>
+        <div className="rounded border border-edge bg-panel">
           <PositionsTable positions={open?.positions ?? []} />
         </div>
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-300">History</h2>
-        <div className="overflow-auto rounded-lg bg-slate-900">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-slate-500">
+        <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted">History</h2>
+        <div className="overflow-auto rounded border border-edge bg-panel">
+          <table className="w-full font-mono font-tabular text-[11px]">
+            <thead className="text-left text-[10px] uppercase tracking-wide text-muted">
               <tr>
-                <th className="px-3 py-2">Symbol</th>
-                <th className="px-3 py-2">Side</th>
-                <th className="px-3 py-2">Lots</th>
-                <th className="px-3 py-2">Entry</th>
-                <th className="px-3 py-2">Close</th>
-                <th className="px-3 py-2">Reason</th>
-                <th className="px-3 py-2">Realized PnL</th>
+                <th className="px-3 py-1.5 font-medium">Symbol</th>
+                <th className="px-3 py-1.5 font-medium">Side</th>
+                <th className="px-3 py-1.5 text-right font-medium">Lots</th>
+                <th className="px-3 py-1.5 text-right font-medium">Entry</th>
+                <th className="px-3 py-1.5 text-right font-medium">Close</th>
+                <th className="px-3 py-1.5 font-medium">Reason</th>
+                <th className="px-3 py-1.5 text-right font-medium">Realized PnL</th>
               </tr>
             </thead>
             <tbody>
               {(history?.positions ?? []).map((p) => (
-                <tr key={p.id} className="border-t border-slate-800">
-                  <td className="px-3 py-2">{p.symbolCode}</td>
-                  <td className={`px-3 py-2 ${p.side === "buy" ? "text-emerald-400" : "text-red-400"}`}>{p.side}</td>
-                  <td className="px-3 py-2">{p.lots}</td>
-                  <td className="px-3 py-2">{p.entryPrice}</td>
-                  <td className="px-3 py-2">{p.closePrice}</td>
-                  <td className="px-3 py-2 text-slate-400">{p.closeReason}</td>
-                  <td
-                    className={`px-3 py-2 ${Number(p.realizedPnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                  >
+                <tr key={p.id} className="border-t border-edge/60">
+                  <td className="px-3 py-1.5">
+                    <span className="rounded bg-elevated px-1.5 py-0.5 text-primary">{p.symbolCode}</span>
+                  </td>
+                  <td className={`px-3 py-1.5 uppercase ${p.side === "buy" ? "text-up" : "text-down"}`}>{p.side}</td>
+                  <td className="px-3 py-1.5 text-right text-primary">{p.lots}</td>
+                  <td className="px-3 py-1.5 text-right text-primary">{p.entryPrice}</td>
+                  <td className="px-3 py-1.5 text-right text-primary">{p.closePrice}</td>
+                  <td className="px-3 py-1.5 text-muted">{p.closeReason}</td>
+                  <td className={`px-3 py-1.5 text-right ${Number(p.realizedPnl ?? 0) >= 0 ? "text-up" : "text-down"}`}>
                     {p.realizedPnl}
                   </td>
                 </tr>
               ))}
               {(history?.positions ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
+                  <td colSpan={7} className="px-3 py-4 text-center text-muted">
                     No closed trades yet.
                   </td>
                 </tr>

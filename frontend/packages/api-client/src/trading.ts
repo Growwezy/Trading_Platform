@@ -35,6 +35,10 @@ export interface AccountSummary {
 export interface MarketSymbol {
   code: string;
   assetClass: string;
+  contractSize: string;
+  leverageCap: string;
+  minLot: string;
+  maxLot: string;
   bid: string | null;
   ask: string | null;
 }
