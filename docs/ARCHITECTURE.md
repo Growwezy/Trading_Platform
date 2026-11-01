@@ -4,58 +4,58 @@ How the pieces in `TECH_STACK.md` fit together: tenant resolution, auth, the pri
 
 ## 0. Repository layout
 
-The actual folder tree for the monorepo proposed in §4/§5:
+One repo, two top-level folders — `frontend/` and `backend/` — rather than splitting into separate repositories. A separate repo per side would mean the shared API types either get duplicated or published as an npm package, a feature touching both sides needs two coordinated PRs instead of one atomic commit, and local dev means running two clones instead of one; none of that buys a 2-person team anything right now, so it stays one repo.
 
 ```
 Trading-Platform/
-├── apps/
-│   ├── trader/            <subdomain>.<platform-domain>/
-│   ├── admin/              <subdomain>.<platform-domain>/admin
-│   └── superadmin/         trade.growwezy.com (+ public marketing pages)
-├── packages/
-│   ├── ui/                 shared components, theme, Tailwind config
-│   ├── api-client/         typed REST calls via TanStack Query (API_SPEC.md)
-│   └── chart-feed/         openalgo-charts DataFeed adapter (§7)
-├── server/
+├── frontend/
+│   ├── trader/              <subdomain>.<platform-domain>/
+│   ├── admin/                <subdomain>.<platform-domain>/admin
+│   ├── superadmin/           trade.growwezy.com (+ public marketing pages)
+│   └── packages/
+│       ├── ui/                shared components, theme, Tailwind config
+│       ├── api-client/        typed REST calls via TanStack Query (API_SPEC.md)
+│       └── chart-feed/        openalgo-charts DataFeed adapter (§7)
+├── backend/
 │   ├── modules/
 │   │   ├── tenants/
 │   │   ├── auth/
 │   │   ├── kyc/
 │   │   ├── funds/
 │   │   ├── symbols/
-│   │   ├── trading/        the engine from TRADING_ENGINE.md
+│   │   ├── trading/           the engine from TRADING_ENGINE.md
 │   │   ├── referrals/
 │   │   └── notifications/
-│   ├── feeds/               Binance, Twelve Data adapters (§6)
-│   ├── ws/                  WebSocket server
+│   ├── feeds/                  Binance, Twelve Data adapters (§6)
+│   ├── ws/                     WebSocket server
 │   ├── prisma/
-│   │   ├── schema.prisma    from DATABASE_SCHEMA.md
+│   │   ├── schema.prisma       from DATABASE_SCHEMA.md
 │   │   └── migrations/
 │   └── Dockerfile
-├── docs/                    this planning set
-├── docker-compose.yml       backend + Postgres + Redis, local dev
-├── package.json             npm/pnpm workspaces root
+├── docs/                       this planning set
+├── docker-compose.yml          backend + Postgres + Redis, local dev
+├── package.json                npm/pnpm workspaces root (frontend/trader, frontend/admin, frontend/superadmin, frontend/packages/*)
 └── .gitignore
 ```
 
-Each `apps/*` app is a standard Vite React app internally:
+Each `frontend/{trader,admin,superadmin}` is a standard Vite React app internally:
 
 ```
-apps/trader/
+frontend/trader/
 ├── src/
 │   ├── pages/        one folder per page, from docs/roles/TRADER.md's 16 pages
 │   ├── components/
 │   ├── store/         Zustand slices — live prices, open positions
-│   ├── api/           TanStack Query hooks, built on packages/api-client
+│   ├── api/           TanStack Query hooks, built on frontend/packages/api-client
 │   └── main.tsx
 ├── index.html
 └── vite.config.ts
 ```
 
-Each `server/modules/*` follows the same four files, named after its module:
+Each `backend/modules/*` follows the same four files, named after its module:
 
 ```
-server/modules/trading/
+backend/modules/trading/
 ├── trading.routes.ts
 ├── trading.controller.ts
 ├── trading.service.ts     the actual engine logic
@@ -114,11 +114,11 @@ Three separate single-page apps, one monorepo, sharing common packages:
 
 | App | Serves | Pages |
 | --- | --- | --- |
-| `apps/trader` | `<subdomain>.<platform-domain>/` | 16 |
-| `apps/admin` | `<subdomain>.<platform-domain>/admin` | 23 |
-| `apps/superadmin` | `trade.growwezy.com` (+ the public marketing pages) | 17 |
+| `frontend/trader` | `<subdomain>.<platform-domain>/` | 16 |
+| `frontend/admin` | `<subdomain>.<platform-domain>/admin` | 23 |
+| `frontend/superadmin` | `trade.growwezy.com` (+ the public marketing pages) | 17 |
 
-Shared packages: `packages/ui` (components, theme), `packages/api-client` (typed REST calls via TanStack Query), `packages/chart-feed` (the OpenAlgo Charts `DataFeed` adapter, §6).
+Shared packages: `frontend/packages/ui` (components, theme), `frontend/packages/api-client` (typed REST calls via TanStack Query), `frontend/packages/chart-feed` (the OpenAlgo Charts `DataFeed` adapter, §6).
 
 **Why three apps instead of one:** a trader never downloads admin code and vice versa (smaller bundles, cleaner permission boundaries by construction), and the three surfaces genuinely have almost no shared screens. The cost is some duplicated scaffolding (routing, auth check on load) — small for a 2-person team using shared packages.
 
@@ -127,7 +127,7 @@ Shared packages: `packages/ui` (components, theme), `packages/api-client` (typed
 **One Node/Express service to start**, not split into microservices — a 2-person team doesn't benefit from that overhead yet, and nothing here needs independent scaling right away. Organized internally by domain, not by role:
 
 ```
-server/
+backend/
   modules/
     tenants/        onboarding, branding, subdomain lifecycle
     auth/           login, OTP, sessions
