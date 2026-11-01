@@ -31,7 +31,7 @@ Price rises to $61,000. Unrealized PnL = (61,000 − 60,000) × 0.1 = **+$100**.
 
 They close the position at $61,000. Realized PnL = +$100, written as a transaction. Balance becomes $1,100. Margin in use returns to $0.
 
-## 2. Position model: one ticket per trade **(proposed)**
+## 2. Position model: one ticket per trade **(decided 2026-11-01)**
 
 Each trade a trader opens is its own position — its own entry price, size, leverage, SL/TP and margin — not merged into one net position per symbol. A trader can hold several open positions on the same symbol at once (even opposite directions), and closes or modifies each individually.
 
@@ -134,12 +134,14 @@ getAccountSnapshot(tenantId, traderId): { balance, equity, margin, freeMargin, m
 
 Mirrors the shape already proven in the terminal test's `trade-engine.js`, with three real differences: persisted in Postgres instead of in memory, scoped by `tenantId` everywhere, and every write goes through the transaction rule in §10 instead of just mutating an object.
 
-## 13. Open items — confirm before building
+## 13. Decided (2026-11-01) — standard retail-broker defaults, all configurable per tenant later
 
-1. **Leverage model**: trader picks up to a per-symbol maximum (as proposed in §4), or one fixed leverage per symbol?
-2. **Margin call / stop-out thresholds** (§9): use the proposed 100% / 50% defaults, or different numbers? Configurable per tenant from day one, or a global constant for now?
-3. **Order types** (§3): market-only acceptable for this phase, or are pending Limit/Stop orders actually needed at launch?
-4. **Partial close** (§10): full-close-only acceptable for this phase?
-5. **Account currency**: assumed single currency (USD) for every tenant's balances — no multi-currency accounts or FX conversion. Confirm.
-6. **Swaps** (overnight financing on leveraged positions): not mentioned as in scope anywhere, and not in the out-of-scope list either. Confirm it's out of scope for this phase (recommended, to keep this phase simpler) or needs building.
-7. **Minimum/maximum lot size per symbol** (§4): real numbers still needed before launch, not just the concept.
+All seven items below were open questions; resolved to standard values so building isn't blocked. None of these are hardcoded constants — they're tenant/symbol-level settings an Admin can change from their panel. See `DECISIONS.md`.
+
+1. **Leverage model**: trader picks up to a per-symbol maximum (as proposed in §4) — not one fixed leverage per symbol.
+2. **Margin call / stop-out thresholds** (§9): **100% / 50%**, the MT4/MT5 default. Configurable per tenant (stored on the tenant, not a global constant). **Pending final confirmation from the client** — message sent 2026-11-01 asking whether these defaults are acceptable, along with per-asset-class max leverage. Update here once they reply.
+3. **Order types** (§3): market orders only this phase. No pending Limit/Stop orders.
+4. **Partial close** (§10): full-close-only this phase.
+5. **Account currency**: single currency (USD) for every tenant's balances. No multi-currency/FX conversion.
+6. **Swaps** (overnight financing): out of scope this phase.
+7. **Minimum/maximum lot size per symbol** (§4): default **0.01 min / 10 max** per symbol (already what `backend/prisma/seed.ts` uses), adjustable per tenant per symbol. Default max leverage per asset class pending the same client reply as item 2 — using **100x Forex / 20x Crypto / 50x Commodities** in the meantime (also already in the seed data).

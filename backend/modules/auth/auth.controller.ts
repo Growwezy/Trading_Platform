@@ -108,11 +108,7 @@ export function logout(req: Request, res: Response, next: NextFunction) {
 
 export async function me(req: Request, res: Response, next: NextFunction) {
   try {
-    if (!req.session.userId || req.session.tenantId !== (req.tenant?.id ?? null)) {
-      res.status(401).json({ error: { code: "no_session", message: "Not logged in." } });
-      return;
-    }
-    const user = await getTraderMe(req.session.userId);
+    const user = await getTraderMe(req.session.userId!);
     res.json({ user });
   } catch (err) {
     next(err);

@@ -1,17 +1,13 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../../lib/prisma.js";
+import { AppError } from "../../lib/app-error.js";
 import { emailSender } from "./email-sender.js";
 import { consumeOtp, issueOtp } from "./otp.js";
 
 const BCRYPT_ROUNDS = 12;
 
-export class AuthError extends Error {
-  status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
+const AuthError = AppError;
+export { AuthError };
 
 export async function signupTrader(
   tenantId: string,

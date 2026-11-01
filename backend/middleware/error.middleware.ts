@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
-import { AuthError } from "../modules/auth/auth.service.js";
+import { AppError } from "../lib/app-error.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorMiddleware(err: unknown, _req: Request, res: Response, _next: NextFunction) {
@@ -11,8 +11,8 @@ export function errorMiddleware(err: unknown, _req: Request, res: Response, _nex
     return;
   }
 
-  if (err instanceof AuthError) {
-    res.status(err.status).json({ error: { code: "auth_error", message: err.message } });
+  if (err instanceof AppError) {
+    res.status(err.status).json({ error: { code: "app_error", message: err.message } });
     return;
   }
 

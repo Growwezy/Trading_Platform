@@ -20,16 +20,7 @@ Every unresolved item across `/docs`, in one place, so nothing needs hunting thr
 
 ## Trading engine (need the user's risk/product call)
 
-| # | Question | Source |
-| --- | --- | --- |
-| 10 | Leverage model: trader picks up to a per-symbol maximum, or one fixed leverage per symbol? | `TRADING_ENGINE.md` §4, §13.1 |
-| 11 | Margin call / stop-out thresholds: use the proposed 100% / 50% defaults, or different numbers? Configurable per tenant from day one? | `TRADING_ENGINE.md` §9, §13.2 |
-| 12 | Order types: market-only acceptable for launch, or are pending Limit/Stop orders needed? | `TRADING_ENGINE.md` §3, §13.3 |
-| 13 | Partial close: full-close-only acceptable, or is partial close needed? | `TRADING_ENGINE.md` §10, §13.4 |
-| 14 | Account currency: single currency (USD) assumed for every tenant — confirm, no multi-currency/FX conversion planned | `TRADING_ENGINE.md` §13.5 |
-| 15 | Swaps (overnight financing): confirm out of scope this phase | `TRADING_ENGINE.md` §13.6 |
-| 16 | Minimum/maximum lot size per symbol: real numbers needed before launch | `TRADING_ENGINE.md` §4, §13.7 |
-| 17 | Position model: one ticket per trade (proposed), or one combined position per symbol? | `TRADING_ENGINE.md` §2 |
+Items 10, 12–17 **resolved 2026-11-01** to the defaults already proposed in `TRADING_ENGINE.md` — see §13 there and `DECISIONS.md`. Item 17 (one ticket per trade, not one combined position per symbol) matches the `positions`/`position_history` tables already in `backend/prisma/schema.prisma`. Item 11 (margin call/stop-out %) resolved to the 100%/50% default for building, but sent to the client for confirmation alongside max leverage per asset class — not a blocker, update once they reply.
 
 ## Infrastructure (engineering-resolvable, but not yet picked)
 

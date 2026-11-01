@@ -70,16 +70,24 @@ async function main() {
 
   // Placeholder figures — TRADING_ENGINE.md open items (#10 leverage model,
   // #16 min/max lot size) aren't resolved yet. Revisit once they are.
+  // baseSpreadPoints is a direct price-unit offset (pricing.service.ts's documented
+  // simplification, not pips) — e.g. 0.0002 on EURUSD is a realistic ~2-pip spread.
   const symbolDefs = [
-    { code: "EURUSD", assetClass: "forex", provider: "twelvedata", contractSize: 100_000, baseSpreadPoints: 1, maxLeverage: 100 },
+    { code: "EURUSD", assetClass: "forex", provider: "twelvedata", contractSize: 100_000, baseSpreadPoints: 0.0002, maxLeverage: 100 },
     { code: "BTCUSDT", assetClass: "crypto", provider: "binance", contractSize: 1, baseSpreadPoints: 5, maxLeverage: 20 },
-    { code: "XAUUSD", assetClass: "commodity", provider: "twelvedata", contractSize: 100, baseSpreadPoints: 3, maxLeverage: 50 },
+    { code: "XAUUSD", assetClass: "commodity", provider: "twelvedata", contractSize: 100, baseSpreadPoints: 0.3, maxLeverage: 50 },
   ] as const;
 
   for (const def of symbolDefs) {
     const symbol = await prisma.symbol.upsert({
       where: { code: def.code },
-      update: {},
+      update: {
+        assetClass: def.assetClass,
+        provider: def.provider,
+        contractSize: def.contractSize,
+        baseSpreadPoints: def.baseSpreadPoints,
+        maxLeverage: def.maxLeverage,
+      },
       create: {
         code: def.code,
         assetClass: def.assetClass,
