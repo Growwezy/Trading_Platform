@@ -7,7 +7,7 @@ Before any task, read:
 3. The role file for the part you are working on: `docs/roles/TRADER.md`, `docs/roles/ADMIN.md` or `docs/roles/SUPERADMIN.md` (full flow, rules and page list per role)
 4. `docs/PROGRESS.md`: what is done and what is next
 
-**Current phase: PLANNING.** Write docs only. No application code until the docs in `/docs` are reviewed and approved.
+**Current phase: BUILDING.** Planning docs in `/docs` are reviewed and approved (2026-11-01). Application code now underway, per `docs/PHASES.md`'s ordering. Keep `/docs` updated as decisions are made or change — it's still the source of truth.
 
 ## What we are building
 - A multi-client (multi-tenant) trading SaaS + broker back-office, built as a **web app** (desktop + mobile browsers).

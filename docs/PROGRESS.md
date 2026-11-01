@@ -26,10 +26,12 @@ Update after every task: move items between sections, add the date.
 
 **All planning docs from `CLAUDE.md`'s "Read first" list, plus the originally-listed set, are now written.** Current phase is still PLANNING per `CLAUDE.md` — these docs need the user's review/approval, and the open items in `OPEN_QUESTIONS.md` need answers, before any application code starts.
 
+- 2026-11-01: Docs reviewed and approved. **Phase moved from PLANNING to BUILDING** (`CLAUDE.md`). Repo layout changed from the original `apps/`+`packages/`+`server/` proposal to two top-level folders, `frontend/` and `backend/`, one repo (not split into separate repositories) — see `ARCHITECTURE.md` §0.
+- 2026-11-01: Created the folder structure from `ARCHITECTURE.md` §0: `frontend/{trader,admin,superadmin}`, `frontend/packages/{ui,api-client,chart-feed}`, `backend/modules/{tenants,auth,kyc,funds,symbols,trading,referrals,notifications}`, `backend/feeds`, `backend/ws`, `backend/prisma/migrations`. Folders only — no `package.json`, dependencies or config yet.
+
 ## In progress
-- Nothing queued — awaiting the user's review of all docs and answers to `OPEN_QUESTIONS.md`.
+- Scaffolding: root `package.json` (workspaces), per-app/per-module `package.json`s, Prisma schema from `DATABASE_SCHEMA.md`, `docker-compose.yml`.
 
 ## Next
-- Review and approve every doc in `/docs`, especially the proposed items each one flags.
-- Get answers to `docs/OPEN_QUESTIONS.md` — business/product items first (referral formula, copy-trading ratio, bonus tradability, pricing, platform name, phase dates/metrics), then trading-engine and infrastructure items.
-- Once docs are reviewed and approved, move out of PLANNING: build the real platform fresh (not from `Test_Terminal/`, which was a disposable spike) — database, multi-tenant setup, then real trade logic per `TRADING_ENGINE.md` and `PHASES.md`'s ordering.
+- Finish scaffolding (Phase 1 of `PHASES.md`): tenant resolution middleware, `tenants`/`users` tables, sessions in Redis, the three auth flows.
+- Get answers to `docs/OPEN_QUESTIONS.md` as they become blocking — business/product items first (referral formula, copy-trading ratio, bonus tradability, pricing, platform name, phase dates/metrics).

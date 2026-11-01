@@ -2,6 +2,8 @@
 
 One line per decision, newest first. Format: date · decision · reason (if any).
 
+- 2026-11-01 · Docs reviewed and approved; phase moved from PLANNING to BUILDING · application code now underway, starting with the repo scaffolding in `PHASES.md` Phase 1
+- 2026-11-01 · Repo layout: one repo, two top-level folders `frontend/` and `backend/`, not `apps/`+`packages/`+`server/` and not two separate repositories · clearer grouping for a 2-person team; a repo split would duplicate/publish shared API types and need two coordinated PRs per cross-stack feature, for no benefit at this size
 - 2026-11-01 · Production: backend, Postgres and Redis each run in their own separate Docker container, never combined into one · an app crash or redeploy must never be able to take the database or Redis down with it; separate containers tune/restart/back up independently and keep the database's files out of the app's filesystem; docker-compose makes multiple containers no harder to run than one
 - 2026-10-31 · Backend runs in Docker in every environment; database is NeonDB while building, Postgres-in-Docker on AWS in production · Neon keeps dev data shared and persistent across both developers' machines; AWS deployment is self-hosted Docker, not RDS. `DATABASE_URL` is the only thing that changes between the two.
 - 2026-10-28 · Auth: server-side sessions in Redis (httpOnly cookie), not JWT · instant revocation for blocking traders / suspending clients / permission changes; no native mobile app this phase; safer than a token in localStorage
