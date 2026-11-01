@@ -17,11 +17,12 @@ Update after every task: move items between sections, add the date.
 - 2026-10-28: `docs/TRADING_ENGINE.md` written — concepts explained plainly (lot, leverage, margin, equity, PnL) with a worked example, ticket-based position model, bid/ask synthesized from last price + spread + markup, margin/PnL formulas, margin call/stop-out, and the module's boundary with funds/referrals/copy-trading. Several proposed defaults flagged for confirmation.
 - 2026-10-31: Decided backend runs in Docker everywhere; database is NeonDB while building (shared/persists across both developers' machines), Postgres-in-Docker on AWS in production (not RDS). Updated `TECH_STACK.md` and `ARCHITECTURE.md` (system diagram, deployment topology, open items — Redis's production hosting is now the only piece of that puzzle still open).
 - 2026-11-01: Decided production runs backend, Postgres and Redis in three separate Docker containers, not combined into one — so an app crash or redeploy can't take the database or Redis down with it. Updated `TECH_STACK.md` and `ARCHITECTURE.md`; this also closes the "Redis hosting in production" open item from the previous entry.
+- 2026-11-01: `docs/DATABASE_SCHEMA.md` written — derived from the 56 pages and `TRADING_ENGINE.md`'s formulas, not guessed from scratch. One `users` table for every role; configurable forms (KYC, client application) stored as JSONB against their own template rather than fixed columns; `transactions` as the one ledger every balance change writes through; ticket-based `positions`/`position_history`. Sessions and OTP deliberately left out — they live in Redis, not here.
 
 ## In progress
-- Planning docs still to write: DATABASE_SCHEMA, API_SPEC, ROLES_PERMISSIONS, PHASES, GLOSSARY, OPEN_QUESTIONS.
+- Planning docs still to write: API_SPEC, ROLES_PERMISSIONS, PHASES, GLOSSARY, OPEN_QUESTIONS.
 
 ## Next
-- Review and approve `ARCHITECTURE.md` and `TRADING_ENGINE.md`, especially their proposed items (listed in each doc's own Open items section).
+- Review and approve `ARCHITECTURE.md`, `TRADING_ENGINE.md` and `DATABASE_SCHEMA.md`, especially their proposed items (listed in each doc's own Open items section).
 - Decide the remaining open items in `TECH_STACK.md` (EC2 vs ECS, Twelve Data production plan, Node version).
 - Build the real platform fresh (not from `Test_Terminal/`, which was a disposable spike): database, multi-tenant setup, then real trade logic (orders, SL / TP, PnL) per `TRADING_ENGINE.md` once written.
