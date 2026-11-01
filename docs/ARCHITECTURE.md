@@ -2,6 +2,68 @@
 
 How the pieces in `TECH_STACK.md` fit together: tenant resolution, auth, the price pipeline, the chart, the trading engine, and where money correctness is enforced. Proposed items are marked **(proposed)** — confirm before building, per the working agreement.
 
+## 0. Repository layout
+
+The actual folder tree for the monorepo proposed in §4/§5:
+
+```
+Trading-Platform/
+├── apps/
+│   ├── trader/            <subdomain>.<platform-domain>/
+│   ├── admin/              <subdomain>.<platform-domain>/admin
+│   └── superadmin/         trade.growwezy.com (+ public marketing pages)
+├── packages/
+│   ├── ui/                 shared components, theme, Tailwind config
+│   ├── api-client/         typed REST calls via TanStack Query (API_SPEC.md)
+│   └── chart-feed/         openalgo-charts DataFeed adapter (§7)
+├── server/
+│   ├── modules/
+│   │   ├── tenants/
+│   │   ├── auth/
+│   │   ├── kyc/
+│   │   ├── funds/
+│   │   ├── symbols/
+│   │   ├── trading/        the engine from TRADING_ENGINE.md
+│   │   ├── referrals/
+│   │   └── notifications/
+│   ├── feeds/               Binance, Twelve Data adapters (§6)
+│   ├── ws/                  WebSocket server
+│   ├── prisma/
+│   │   ├── schema.prisma    from DATABASE_SCHEMA.md
+│   │   └── migrations/
+│   └── Dockerfile
+├── docs/                    this planning set
+├── docker-compose.yml       backend + Postgres + Redis, local dev
+├── package.json             npm/pnpm workspaces root
+└── .gitignore
+```
+
+Each `apps/*` app is a standard Vite React app internally:
+
+```
+apps/trader/
+├── src/
+│   ├── pages/        one folder per page, from docs/roles/TRADER.md's 16 pages
+│   ├── components/
+│   ├── store/         Zustand slices — live prices, open positions
+│   ├── api/           TanStack Query hooks, built on packages/api-client
+│   └── main.tsx
+├── index.html
+└── vite.config.ts
+```
+
+Each `server/modules/*` follows the same four files, named after its module:
+
+```
+server/modules/trading/
+├── trading.routes.ts
+├── trading.controller.ts
+├── trading.service.ts     the actual engine logic
+└── trading.types.ts
+```
+
+Not part of the repo tree (already in `.gitignore`): `Test_Terminal/` (local spike), `openalgo-charts/` (reference clone — the npm package is a `package.json` dependency, not this folder), `node_modules/`, `.env*`.
+
 ## 1. System overview
 
 ```
@@ -126,6 +188,6 @@ In-app only for this phase (no email/SMS delivery system beyond OTP and account 
 
 ## 12. Open items — confirm before building
 
-1. **Monorepo with three frontend apps, one backend service** (§4, §5) — proposed here, not previously decided. Confirm or push back.
+1. **Monorepo with three frontend apps, one backend service** (§0, §4, §5) — proposed here, not previously decided. Confirm or push back. If confirmed, workspace tooling is plain **npm or pnpm workspaces** (proposed) — no Turborepo/Nx; a 2-person team doesn't need the build-caching/task-graph overhead yet.
 2. **WebSocket scaling**: the Redis pub/sub design in §6 assumes more than one backend instance eventually; confirm that's actually the plan, or this can simplify.
 3. Everything still open from `TECH_STACK.md` §"Open items" (EC2 vs ECS, Twelve Data production plan, Node version) feeds into §11 here once decided.

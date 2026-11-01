@@ -39,6 +39,7 @@ Every unresolved item across `/docs`, in one place, so nothing needs hunting thr
 | 19 | Node.js version to standardize on | `TECH_STACK.md` |
 | 20 | Monorepo with three frontend apps + one backend service — confirm or push back | `ARCHITECTURE.md` §12.1 |
 | 21 | WebSocket horizontal scaling (multiple backend instances via Redis pub/sub) — confirm that's actually the near-term plan | `ARCHITECTURE.md` §12.2 |
+| 21a | Monorepo workspace tooling: plain npm/pnpm workspaces (proposed) vs Turborepo/Nx | `ARCHITECTURE.md` §0, §12.1 |
 
 ## Data model (small, confirmable quickly)
 
