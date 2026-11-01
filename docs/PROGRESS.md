@@ -19,11 +19,17 @@ Update after every task: move items between sections, add the date.
 - 2026-11-01: Decided production runs backend, Postgres and Redis in three separate Docker containers, not combined into one — so an app crash or redeploy can't take the database or Redis down with it. Updated `TECH_STACK.md` and `ARCHITECTURE.md`; this also closes the "Redis hosting in production" open item from the previous entry.
 - 2026-11-01: `docs/DATABASE_SCHEMA.md` written — derived from the 56 pages and `TRADING_ENGINE.md`'s formulas, not guessed from scratch. One `users` table for every role; configurable forms (KYC, client application) stored as JSONB against their own template rather than fixed columns; `transactions` as the one ledger every balance change writes through; ticket-based `positions`/`position_history`. Sessions and OTP deliberately left out — they live in Redis, not here.
 - 2026-11-01: `docs/API_SPEC.md` written — REST routes for all 56 pages across the three surfaces (`/api/trader`, `/api/admin`, `/api/superadmin`), plus shared auth/tenant/file routes and the WebSocket message set. Routes map directly onto `DATABASE_SCHEMA.md` tables; no new design decisions, just the surface.
+- 2026-11-01: `docs/ROLES_PERMISSIONS.md` written — cross-cutting permission matrix (resource × role), the sub-admin/staff grant model, and trader account-state gating.
+- 2026-11-01: `docs/GLOSSARY.md` written — plain-language definitions of trading terms and platform terms, for the non-trading-expert team.
+- 2026-11-01: `docs/PHASES.md` written — build-order sequencing (foundation → onboarding/money → trading engine → referral/copy trading → admin depth), derived from what depends on what. Calendar dates and success metrics deliberately left unanswered — `CLAUDE.md` lists them as "ask, don't assume."
+- 2026-11-01: `docs/OPEN_QUESTIONS.md` written — single index of every open item across all docs (29 numbered items, categorized: business/product, trading engine, infrastructure, data model, API-level), each pointing back to its source doc.
+
+**All planning docs from `CLAUDE.md`'s "Read first" list, plus the originally-listed set, are now written.** Current phase is still PLANNING per `CLAUDE.md` — these docs need the user's review/approval, and the open items in `OPEN_QUESTIONS.md` need answers, before any application code starts.
 
 ## In progress
-- Planning docs still to write: ROLES_PERMISSIONS, PHASES, GLOSSARY, OPEN_QUESTIONS.
+- Nothing queued — awaiting the user's review of all docs and answers to `OPEN_QUESTIONS.md`.
 
 ## Next
-- Review and approve `ARCHITECTURE.md`, `TRADING_ENGINE.md` and `DATABASE_SCHEMA.md`, especially their proposed items (listed in each doc's own Open items section).
-- Decide the remaining open items in `TECH_STACK.md` (EC2 vs ECS, Twelve Data production plan, Node version).
-- Build the real platform fresh (not from `Test_Terminal/`, which was a disposable spike): database, multi-tenant setup, then real trade logic (orders, SL / TP, PnL) per `TRADING_ENGINE.md` once written.
+- Review and approve every doc in `/docs`, especially the proposed items each one flags.
+- Get answers to `docs/OPEN_QUESTIONS.md` — business/product items first (referral formula, copy-trading ratio, bonus tradability, pricing, platform name, phase dates/metrics), then trading-engine and infrastructure items.
+- Once docs are reviewed and approved, move out of PLANNING: build the real platform fresh (not from `Test_Terminal/`, which was a disposable spike) — database, multi-tenant setup, then real trade logic per `TRADING_ENGINE.md` and `PHASES.md`'s ordering.
