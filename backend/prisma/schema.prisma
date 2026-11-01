@@ -1,0 +1,554 @@
+// Prisma schema derived from docs/DATABASE_SCHEMA.md.
+// Prisma models/fields use camelCase (idiomatic TS); @map/@@map keep the
+// actual Postgres tables/columns snake_case per that doc's naming rule.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────
+
+enum UserRole {
+  trader
+  admin
+  sub_admin
+  super_admin
+  staff
+}
+
+enum UserStatus {
+  active
+  blocked
+}
+
+enum TenantStatus {
+  active
+  suspended
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
+enum AssetClass {
+  forex
+  crypto
+  commodity
+}
+
+enum FeedProvider {
+  binance
+  twelvedata
+}
+
+enum TransactionType {
+  deposit
+  withdrawal
+  trade_close
+  manual_adjustment
+  bonus
+  referral_credit
+}
+
+enum DepositMethod {
+  bank
+  usdt_bep20
+  usdt_trc20
+}
+
+enum WithdrawalStatus {
+  pending
+  approved
+  rejected
+  paid
+}
+
+enum BillingStatus {
+  pending
+  verified
+}
+
+enum PositionSide {
+  buy
+  sell
+}
+
+enum CloseReason {
+  manual
+  stop_loss
+  take_profit
+  stop_out
+}
+
+enum CopyFollowStatus {
+  active
+  stopped
+}
+
+enum AnnouncementAudience {
+  all
+  group
+}
+
+enum FilePurpose {
+  kyc_doc
+  payment_proof
+  logo
+  application_doc
+}
+
+// ── 1. Tenancy and identity ─────────────────────────────────────────
+
+model Tenant {
+  id              String       @id @default(uuid()) @db.Uuid
+  subdomain       String       @unique
+  companyName     String       @map("company_name")
+  logoUrl         String?      @map("logo_url")
+  brandColors     Json?        @map("brand_colors")
+  status          TenantStatus @default(active)
+  adminOtpEnabled Boolean      @default(false) @map("admin_otp_enabled")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  users               User[]
+  kycFormTemplates    KycFormTemplate[]
+  kycSubmissions      KycSubmission[]
+  tenantSymbols       TenantSymbol[]
+  groups              Group[]
+  groupMarkups        GroupMarkup[]
+  transactions        Transaction[]
+  deposits            Deposit[]
+  withdrawals         Withdrawal[]
+  bonuses             Bonus[]
+  billingSubscriptions BillingSubscription[]
+  positions           Position[]
+  positionHistory     PositionHistory[]
+  copyFollows         CopyFollow[]
+  activityLog         ActivityLog[]
+  notifications       Notification[]
+  announcements       Announcement[]
+  files               File[]
+
+  @@map("tenants")
+}
+
+model User {
+  id              String     @id @default(uuid()) @db.Uuid
+  tenantId        String?    @map("tenant_id") @db.Uuid
+  role            UserRole
+  email           String
+  passwordHash    String     @map("password_hash")
+  status          UserStatus @default(active)
+  referredByUserId String?   @map("referred_by_user_id") @db.Uuid
+  referralCode    String?    @unique @map("referral_code")
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  balance         Decimal    @default(0) @db.Decimal(18, 8)
+  groupId         String?    @map("group_id") @db.Uuid
+  isPublicMaster  Boolean?   @map("is_public_master")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  group        Group?   @relation(fields: [groupId], references: [id])
+  referredBy   User?    @relation("UserReferrals", fields: [referredByUserId], references: [id])
+  referrals    User[]   @relation("UserReferrals")
+
+  permissions            Permission[]
+  reviewedApplications    ClientApplication[]      @relation("ApplicationReviewer")
+  kycSubmissions          KycSubmission[]          @relation("KycUser")
+  reviewedKycSubmissions  KycSubmission[]          @relation("KycReviewer")
+  transactions            Transaction[]            @relation("TransactionUser")
+  createdTransactions     Transaction[]            @relation("TransactionCreator")
+  deposits                Deposit[]                @relation("DepositUser")
+  reviewedDeposits        Deposit[]                @relation("DepositReviewer")
+  withdrawals             Withdrawal[]             @relation("WithdrawalUser")
+  reviewedWithdrawals     Withdrawal[]              @relation("WithdrawalReviewer")
+  bonuses                 Bonus[]                  @relation("BonusUser")
+  grantedBonuses          Bonus[]                  @relation("BonusGranter")
+  verifiedBillings        BillingSubscription[]    @relation("BillingVerifier")
+  positions               Position[]               @relation("PositionUser")
+  positionHistory         PositionHistory[]        @relation("PositionHistoryUser")
+  followsAsFollower       CopyFollow[]             @relation("CopyFollower")
+  followsAsMaster         CopyFollow[]             @relation("CopyMaster")
+  activityLogEntries      ActivityLog[]            @relation("ActivityActor")
+  notifications           Notification[]           @relation("NotificationUser")
+  sentAnnouncements       Announcement[]           @relation("AnnouncementSender")
+  uploadedFiles           File[]                   @relation("FileUploader")
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+model Permission {
+  id       String  @id @default(uuid()) @db.Uuid
+  userId   String  @map("user_id") @db.Uuid
+  resource String
+  canView  Boolean @default(false) @map("can_view")
+  canEdit  Boolean @default(false) @map("can_edit")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resource])
+  @@map("permissions")
+}
+
+// ── 2. Onboarding forms ─────────────────────────────────────────────
+
+model ApplicationFormTemplate {
+  id          String    @id @default(uuid()) @db.Uuid
+  fields      Json
+  publishedAt DateTime? @map("published_at")
+
+  @@map("application_form_template")
+}
+
+model ClientApplication {
+  id               String       @id @default(uuid()) @db.Uuid
+  companyName      String       @map("company_name")
+  preferredSubdomain String     @map("preferred_subdomain")
+  submittedData    Json         @map("submitted_data")
+  documents        String[]
+  status           ReviewStatus @default(pending)
+  reviewedByUserId String?      @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt       DateTime?    @map("reviewed_at")
+  rejectionReason  String?      @map("rejection_reason")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  reviewedBy User? @relation("ApplicationReviewer", fields: [reviewedByUserId], references: [id])
+
+  @@map("client_applications")
+}
+
+model KycFormTemplate {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  fields      Json
+  publishedAt DateTime? @map("published_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("kyc_form_templates")
+}
+
+model KycSubmission {
+  id               String       @id @default(uuid()) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  userId           String       @map("user_id") @db.Uuid
+  submittedData    Json         @map("submitted_data")
+  documents        String[]
+  status           ReviewStatus @default(pending)
+  reviewedByUserId String?      @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt       DateTime?    @map("reviewed_at")
+  rejectionReason  String?      @map("rejection_reason")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  user       User   @relation("KycUser", fields: [userId], references: [id])
+  reviewedBy User?  @relation("KycReviewer", fields: [reviewedByUserId], references: [id])
+
+  @@map("kyc_submissions")
+}
+
+// ── 3. Symbols and trading configuration ────────────────────────────
+
+model Symbol {
+  id               String       @id @default(uuid()) @db.Uuid
+  code             String       @unique
+  assetClass       AssetClass   @map("asset_class")
+  provider         FeedProvider
+  contractSize     Decimal      @map("contract_size") @db.Decimal(18, 8)
+  baseSpreadPoints Decimal      @map("base_spread_points") @db.Decimal(18, 8)
+  maxLeverage      Decimal      @map("max_leverage") @db.Decimal(10, 2)
+
+  tenantSymbols TenantSymbol[]
+  groupMarkups  GroupMarkup[]
+  positions     Position[]
+  positionHistory PositionHistory[]
+
+  @@map("symbols")
+}
+
+model TenantSymbol {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @map("tenant_id") @db.Uuid
+  symbolId     String  @map("symbol_id") @db.Uuid
+  enabled      Boolean @default(true)
+  leverageCap  Decimal @map("leverage_cap") @db.Decimal(10, 2)
+  minLot       Decimal @map("min_lot") @db.Decimal(18, 8)
+  maxLot       Decimal @map("max_lot") @db.Decimal(18, 8)
+  tradingHours Json?   @map("trading_hours")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  symbol Symbol @relation(fields: [symbolId], references: [id])
+
+  @@unique([tenantId, symbolId])
+  @@map("tenant_symbols")
+}
+
+model Group {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  name     String
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  users        User[]
+  groupMarkups GroupMarkup[]
+  announcements Announcement[]
+
+  @@map("groups")
+}
+
+model GroupMarkup {
+  id            String  @id @default(uuid()) @db.Uuid
+  tenantId      String  @map("tenant_id") @db.Uuid
+  groupId       String  @map("group_id") @db.Uuid
+  symbolId      String? @map("symbol_id") @db.Uuid
+  markupPoints  Decimal @map("markup_points") @db.Decimal(10, 2)
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id])
+  group  Group   @relation(fields: [groupId], references: [id])
+  symbol Symbol? @relation(fields: [symbolId], references: [id])
+
+  @@map("group_markups")
+}
+
+// ── 4. Money — the ledger ───────────────────────────────────────────
+
+model Transaction {
+  id              String          @id @default(uuid()) @db.Uuid
+  tenantId        String          @map("tenant_id") @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  type            TransactionType
+  amount          Decimal         @db.Decimal(18, 8)
+  balanceAfter    Decimal         @map("balance_after") @db.Decimal(18, 8)
+  referenceTable  String          @map("reference_table")
+  referenceId     String          @map("reference_id")
+  createdByUserId String?         @map("created_by_user_id") @db.Uuid
+  reason          String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  tenant      Tenant @relation(fields: [tenantId], references: [id])
+  user        User   @relation("TransactionUser", fields: [userId], references: [id])
+  createdBy   User?  @relation("TransactionCreator", fields: [createdByUserId], references: [id])
+
+  @@map("transactions")
+}
+
+model Deposit {
+  id               String        @id @default(uuid()) @db.Uuid
+  tenantId         String        @map("tenant_id") @db.Uuid
+  userId           String        @map("user_id") @db.Uuid
+  amount           Decimal       @db.Decimal(18, 8)
+  method           DepositMethod
+  proofFileId      String?       @map("proof_file_id") @db.Uuid
+  status           ReviewStatus  @default(pending)
+  reviewedByUserId String?       @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt       DateTime?     @map("reviewed_at")
+  rejectionReason  String?       @map("rejection_reason")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  user       User   @relation("DepositUser", fields: [userId], references: [id])
+  reviewedBy User?  @relation("DepositReviewer", fields: [reviewedByUserId], references: [id])
+  proofFile  File?  @relation("DepositProofFile", fields: [proofFileId], references: [id])
+
+  @@map("deposits")
+}
+
+model Withdrawal {
+  id               String            @id @default(uuid()) @db.Uuid
+  tenantId         String            @map("tenant_id") @db.Uuid
+  userId           String            @map("user_id") @db.Uuid
+  amount           Decimal           @db.Decimal(18, 8)
+  method           DepositMethod
+  status           WithdrawalStatus  @default(pending)
+  reviewedByUserId String?           @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt       DateTime?         @map("reviewed_at")
+  paidAt           DateTime?         @map("paid_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  user       User   @relation("WithdrawalUser", fields: [userId], references: [id])
+  reviewedBy User?  @relation("WithdrawalReviewer", fields: [reviewedByUserId], references: [id])
+
+  @@map("withdrawals")
+}
+
+model Bonus {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  amount          Decimal  @db.Decimal(18, 8)
+  tradableOnly    Boolean  @map("tradable_only")
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  reason          String
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  user      User   @relation("BonusUser", fields: [userId], references: [id])
+  createdBy User   @relation("BonusGranter", fields: [createdByUserId], references: [id])
+
+  @@map("bonuses")
+}
+
+model BillingSubscription {
+  id              String        @id @default(uuid()) @db.Uuid
+  tenantId        String        @map("tenant_id") @db.Uuid
+  periodStart     DateTime      @map("period_start")
+  periodEnd       DateTime      @map("period_end")
+  amountDue       Decimal       @map("amount_due") @db.Decimal(18, 2)
+  proofFileId     String?       @map("proof_file_id") @db.Uuid
+  status          BillingStatus @default(pending)
+  verifiedByUserId String?      @map("verified_by_user_id") @db.Uuid
+  verifiedAt      DateTime?     @map("verified_at")
+
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  verifiedBy User?  @relation("BillingVerifier", fields: [verifiedByUserId], references: [id])
+  proofFile  File?  @relation("BillingProofFile", fields: [proofFileId], references: [id])
+
+  @@map("billing_subscriptions")
+}
+
+// ── 5. Trading: positions ───────────────────────────────────────────
+
+model Position {
+  id              String       @id @default(uuid()) @db.Uuid
+  tenantId        String       @map("tenant_id") @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  symbolId        String       @map("symbol_id") @db.Uuid
+  side            PositionSide
+  lots            Decimal      @db.Decimal(18, 8)
+  units           Decimal      @db.Decimal(18, 8)
+  leverage        Decimal      @db.Decimal(10, 2)
+  entryPrice      Decimal      @map("entry_price") @db.Decimal(18, 8)
+  stopLoss        Decimal?     @map("stop_loss") @db.Decimal(18, 8)
+  takeProfit      Decimal?     @map("take_profit") @db.Decimal(18, 8)
+  requiredMargin  Decimal      @map("required_margin") @db.Decimal(18, 8)
+  openedAt        DateTime     @default(now()) @map("opened_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation("PositionUser", fields: [userId], references: [id])
+  symbol Symbol @relation(fields: [symbolId], references: [id])
+
+  @@map("positions")
+}
+
+model PositionHistory {
+  id              String       @id @default(uuid()) @db.Uuid
+  tenantId        String       @map("tenant_id") @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  symbolId        String       @map("symbol_id") @db.Uuid
+  side            PositionSide
+  lots            Decimal      @db.Decimal(18, 8)
+  units           Decimal      @db.Decimal(18, 8)
+  leverage        Decimal      @db.Decimal(10, 2)
+  entryPrice      Decimal      @map("entry_price") @db.Decimal(18, 8)
+  stopLoss        Decimal?     @map("stop_loss") @db.Decimal(18, 8)
+  takeProfit      Decimal?     @map("take_profit") @db.Decimal(18, 8)
+  requiredMargin  Decimal      @map("required_margin") @db.Decimal(18, 8)
+  openedAt        DateTime     @map("opened_at")
+  closePrice      Decimal      @map("close_price") @db.Decimal(18, 8)
+  realizedPnl     Decimal      @map("realized_pnl") @db.Decimal(18, 8)
+  closeReason     CloseReason  @map("close_reason")
+  closedAt        DateTime     @default(now()) @map("closed_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation("PositionHistoryUser", fields: [userId], references: [id])
+  symbol Symbol @relation(fields: [symbolId], references: [id])
+
+  @@map("position_history")
+}
+
+// ── 6. Referral and copy trading ────────────────────────────────────
+
+model CopyFollow {
+  id             String            @id @default(uuid()) @db.Uuid
+  tenantId       String            @map("tenant_id") @db.Uuid
+  followerUserId String            @map("follower_user_id") @db.Uuid
+  masterUserId   String            @map("master_user_id") @db.Uuid
+  allocation     Json
+  status         CopyFollowStatus  @default(active)
+  startedAt      DateTime          @default(now()) @map("started_at")
+  stoppedAt      DateTime?         @map("stopped_at")
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  follower User   @relation("CopyFollower", fields: [followerUserId], references: [id])
+  master   User   @relation("CopyMaster", fields: [masterUserId], references: [id])
+
+  @@map("copy_follows")
+}
+
+// ── 7. Operations ────────────────────────────────────────────────────
+
+model ActivityLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String?  @map("tenant_id") @db.Uuid
+  actorUserId  String   @map("actor_user_id") @db.Uuid
+  action       String
+  targetTable  String   @map("target_table")
+  targetId     String   @map("target_id")
+  details      Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  actor  User    @relation("ActivityActor", fields: [actorUserId], references: [id])
+
+  @@map("activity_log")
+}
+
+model Notification {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  type         String
+  message      String
+  readAt       DateTime? @map("read_at")
+  relatedTable String?   @map("related_table")
+  relatedId    String?   @map("related_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation("NotificationUser", fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model Announcement {
+  id           String               @id @default(uuid()) @db.Uuid
+  tenantId     String?              @map("tenant_id") @db.Uuid
+  senderUserId String               @map("sender_user_id") @db.Uuid
+  audience     AnnouncementAudience
+  groupId      String?              @map("group_id") @db.Uuid
+  message      String
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  sender User    @relation("AnnouncementSender", fields: [senderUserId], references: [id])
+  group  Group?  @relation(fields: [groupId], references: [id])
+
+  @@map("announcements")
+}
+
+// ── 8. Files ──────────────────────────────────────────────────────────
+
+model File {
+  id               String      @id @default(uuid()) @db.Uuid
+  tenantId         String?     @map("tenant_id") @db.Uuid
+  purpose          FilePurpose
+  storageKey       String      @map("storage_key")
+  uploadedByUserId String?     @map("uploaded_by_user_id") @db.Uuid
+  createdAt        DateTime    @default(now()) @map("created_at")
+
+  tenant             Tenant?               @relation(fields: [tenantId], references: [id])
+  uploadedBy         User?                 @relation("FileUploader", fields: [uploadedByUserId], references: [id])
+  depositsAsProof    Deposit[]             @relation("DepositProofFile")
+  billingsAsProof    BillingSubscription[] @relation("BillingProofFile")
+
+  @@map("files")
+}

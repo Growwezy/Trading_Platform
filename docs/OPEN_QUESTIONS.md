@@ -36,18 +36,18 @@ Every unresolved item across `/docs`, in one place, so nothing needs hunting thr
 | # | Question | Source |
 | --- | --- | --- |
 | 18 | Hosting: EC2 vs ECS; staging and production separate from day one? | `TECH_STACK.md`, `ARCHITECTURE.md` §12.3 |
-| 19 | Node.js version to standardize on | `TECH_STACK.md` |
-| 20 | Monorepo with three frontend apps + one backend service — confirm or push back | `ARCHITECTURE.md` §12.1 |
+| ~~19~~ | ~~Node.js version~~ — **resolved 2026-11-01: Node 22** (`backend/Dockerfile`), `engines >= 20` | `TECH_STACK.md`, `DECISIONS.md` |
+| 20 | Monorepo with three frontend apps + one backend service — confirm or push back. **Partially settled:** backend runs as its own standalone npm project for now; root workspace config deliberately deferred until the frontend trader app is scaffolded | `ARCHITECTURE.md` §12.1, `DECISIONS.md` |
 | 21 | WebSocket horizontal scaling (multiple backend instances via Redis pub/sub) — confirm that's actually the near-term plan | `ARCHITECTURE.md` §12.2 |
-| 21a | Workspace tooling: plain npm/pnpm workspaces (proposed) vs Turborepo/Nx | `ARCHITECTURE.md` §0, §12.1 |
+| ~~21a~~ | ~~Workspace tooling~~ — **resolved 2026-11-01: plain npm**, not pnpm | `DECISIONS.md` |
 
 ## Data model (small, confirmable quickly)
 
 | # | Question | Source |
 | --- | --- | --- |
-| 22 | `permissions` as its own table vs a JSONB column on `users` | `DATABASE_SCHEMA.md` §9.1, `ROLES_PERMISSIONS.md` |
+| ~~22~~ | ~~`permissions` as its own table vs a JSONB column on `users`~~ — **resolved 2026-11-01: own table** | `DATABASE_SCHEMA.md` §9.1, `DECISIONS.md` |
 | 23 | Permission granularity: per-page vs per-action within a page | `ROLES_PERMISSIONS.md` |
-| 24 | `activity_log` as one shared table vs two separate ones (Admin / Super Admin) | `DATABASE_SCHEMA.md` §9.2 |
+| ~~24~~ | ~~`activity_log` as one shared table vs two separate ones~~ — **resolved 2026-11-01: one shared table** | `DATABASE_SCHEMA.md` §9.2, `DECISIONS.md` |
 | 25 | Default markup for a trader with no group assigned | `DATABASE_SCHEMA.md` §9.3 |
 | 26 | Default permission grant set for a brand-new sub-admin (none ticked, recommended, vs a starter set) | `ROLES_PERMISSIONS.md` |
 
