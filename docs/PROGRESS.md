@@ -50,6 +50,26 @@ Update after every task: move items between sections, add the date.
 - 2026-11-01: Redesigned the trader frontend to a dense pro-terminal style (user's direction) and wired up tenant branding (`GET /api/tenant/config`, built earlier but unused until now): CSS custom-property design tokens (`frontend/trader/src/index.css`, `tailwind.config.js`) so the tenant's accent color overrides one place, not every component; a real `Watchlist` sidebar with live bid/ask (`frontend/trader/src/components/Watchlist.tsx`, new); denser `Layout` with a live account strip in the header; `OrderPanel` redesigned with a buy/sell segmented control showing live prices plus a client-side notional/margin preview; `PositionsTable`/`Dashboard`/`Holdings` redone with monospace tabular numbers. `GET /api/trader/symbols` extended to also return `contractSize`/`leverageCap`/`minLot`/`maxLot` so the margin preview is accurate, not approximated.
 - 2026-11-01: Verified: `tsc --noEmit` and `vite build` clean on both backend and frontend; backend restarted and re-tested live (symbols endpoint's new fields, tenant config, reset balance all confirmed via curl); frontend picked up every change via Vite HMR with no errors in the dev server log. **Not yet visually re-confirmed** — same limitation as before, no browser automation tool this session.
 
+- 2026-11-04: Master website **Landing Page** (page 1 of `docs/roles/SUPERADMIN.md`) built as a new workspace app, `frontend/superadmin` (`@growwezy/superadmin`, `npm run dev:superadmin`, port 5174): glass pill nav, compact hero, layered blue/cyan/pink background with edge particles, and an overlapping three-panel dashboard preview with illustrative sample data. Added to root npm workspaces. "Start Exploring" goes to `/apply`; `/apply`, `/about`, `/contact` and any other path show a placeholder until those pages exist (Client Application Form is next on the master website). Verified: `tsc --noEmit` and `vite build` clean, rendered and compared at 1440x900, no horizontal overflow at 390px, no console errors.
+
+- 2026-11-04: Landing page background animation upgraded: speckle layers now orbit in circles (different radius/speed/direction per layer) and twinkle, plus 19 glowing orbs on their own circular paths. CSS only, no new dependencies; all motion stops under `prefers-reduced-motion`.
+
+- 2026-11-04: Landing page copy rewritten from the vendor brief deck: hero ("Run Your Own Branded Trading Platform", labels, description, "Become a Broker" CTA) and the three preview panels (Broker Onboarding, Super Admin, Trader Terminal) now describe this platform. Page title/description updated. Sample numbers in the panels are illustrative.
+
+- 2026-11-04: Landing page extended below the hero in `frontend/superadmin`: About (orbit diagram of Growwezy → brokers → traders), Features (bento grid from the deck), Start Your Broker Journey (gradient banner + 5-step timeline), Contact (guide cards + form) and a footer. Nav pill made slightly larger/longer with section links. Contact form is not connected to a backend yet — it shows a "preview only" notice on submit. Verified at 1440x900 and 390px, no horizontal overflow; `tsc` and `vite build` clean.
+
+- 2026-11-04: Landing hero centre panel now shows a live simulated candlestick chart (BTC/USDT sample, canvas, 60fps, pauses off-screen, static for reduced-motion). Hero panels are fully visible (no clipping). Section seams removed: one continuous background + one continuous particle layer from About to Contact, hero fades into it. Verified at 1440x900 and 390px (no overflow); `tsc` and `vite build` clean.
+
+- 2026-11-04: Hero dashboard panels made identical in size (396x451 at 1440px, 372x451 at 1100px, 328x443 on mobile). Trader Terminal trimmed to fit; hero bottom padding increased and bloom shortened so card shadows are not clipped and there is no edge under the cards.
+
+- 2026-11-04: About section rebuilt as a pinned scroll-driven story (3 steps, big headlines that light up one at a time, animated visual on the right: orbit diagram → broker admin panel approving requests → phone with live candlestick chart). Stacked layout on mobile/tablet. Live chart component made reusable (compact mode, pausable). Verified each step at 1440x900 and the stacked layout at 390px; `tsc` and `vite build` clean.
+
+- 2026-11-04: Features section rebuilt as four giant numerals 1–4 with a rolling-digit animation (verified: digits start at 0 and settle on 1/2/3/4; static for reduced-motion) and only the four best features. `tsc` and `vite build` clean.
+
+- 2026-11-04: Start Your Broker Journey rebuilt as an auto-sliding accordion of five step cards with per-step illustrations, progress bar, hover/tap/keyboard control, reduced-motion fallback (no autoplay). Verified autoplay loops, hover opens the card and pauses, mobile vertical layout without overflow. `tsc` and `vite build` clean.
+
+- 2026-11-04: Journey cards made compact per feedback (cards were too tall/elongated): ~300px tall instead of 460px, wider collapsed cards, rounder corners, icon chip on every card; fixed clipping of the open card on desktops narrower than 1280px. Verified at 1440, 1100 and 390px.
+
 ## In progress
 - Nothing active right now — redesign is deployed to the running dev servers; needs the user to look at it again.
 

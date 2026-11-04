@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  html,
+  body {
+    @apply overflow-x-clip;
+  }
+
+  body {
+    @apply font-body antialiased text-slate-50;
+    background-color: #040a2c;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
+
+@layer utilities {
+  /* Primary glow button (used by the landing mobile menu) */
+  .btn-glow {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    color: #f8fafc;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px -4px rgba(59, 130, 246, 0.4);
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 6px 28px -4px rgba(59, 130, 246, 0.55);
+    transform: translateY(-1px);
+  }
+}
