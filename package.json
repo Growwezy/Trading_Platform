@@ -3,10 +3,12 @@
   "private": true,
   "workspaces": [
     "frontend/trader",
+    "frontend/superadmin",
     "frontend/packages/api-client",
     "frontend/packages/chart-feed"
   ],
   "scripts": {
-    "dev:trader": "npm run dev -w frontend/trader"
+    "dev:trader": "npm run dev -w frontend/trader",
+    "dev:superadmin": "npm run dev -w frontend/superadmin"
   }
 }
